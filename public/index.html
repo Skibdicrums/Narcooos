@@ -2,11 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>WeatherLook</title>
-  <script src="/script.js" defer></script>
+  <title>DEDSEC Tracker</title>
+  <link rel="stylesheet" href="/public/css/style.css">
 </head>
 <body>
-  <h1>WeatherLook</h1>
-  <p>Current forecast: 75°F and sunny with mild winds.</p>
+  <h1>DEDSEC Tracker</h1>
+  <form method="POST" action="/shorten">
+    <input name="url" placeholder="Enter URL" required/>
+    <button type="submit">Generate Short Link</button>
+  </form>
 </body>
 </html>
