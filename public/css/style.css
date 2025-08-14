@@ -1,0 +1,46 @@
+body {
+    background: #0a0a0a;
+    color: #0f0;
+    font-family: 'Fira Code', monospace;
+    padding: 20px;
+}
+h1 {
+    color: #0ff;
+    border-bottom: 1px solid #0f0;
+    padding-bottom: 5px;
+}
+input, button {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    border: none;
+    font-family: monospace;
+}
+input {
+    background: #111;
+    color: #0f0;
+}
+button {
+    background: #00ff00;
+    color: #000;
+    cursor: pointer;
+}
+button:hover {
+    background: #0f0;
+}
+a {
+    color: #0ff;
+    text-decoration: none;
+}
+.link-block {
+    padding: 5px;
+    border-left: 2px solid #0f0;
+    margin: 10px 0;
+}
+.no-visits {
+    color: #555;
+}
+ul {
+    list-style: none;
+    padding-left: 20px;
+}
